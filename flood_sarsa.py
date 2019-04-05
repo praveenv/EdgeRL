@@ -5,6 +5,8 @@ from collections import defaultdict, OrderedDict
 
 from flood_env import Environment
 
+from flood_statedef import State
+
 
 def epsilon_greedy_policy(Q, epsilon):
     """
@@ -47,7 +49,7 @@ def epsilon_greedy_policy(Q, epsilon):
         
 
         sa_val = np.zeros(ac_len, dtype=float)
-        state_Q = Q[frozenset(state)]
+        state_Q = Q[state]
 
 
         max_v = -np.inf
@@ -80,22 +82,29 @@ def parse_train_data(n_ep,data):
     n_ep : integer reflecting current episode number and the training data index that needs to be accessed. 
     data : input training data (one day's worth) of the form {'1':{'sensor':{}, 'analytic':{},'external':{},'truth':{}}} , an ordered Dictionary
     """
-    current_actual_environment = {}
+    
     current_true_value = -1
     n_ep = str(n_ep)
     for key,value in data.items():
         if key == n_ep:
-            current_actual_environment['sensor'] = value['sensor']
-            current_actual_environment['analytic'] = value['analytic']
-            current_actual_environment['external'] = value['external']
+            current_actual_environment = State(value['sensor'],value['analytic'],value['external'])
             current_true_value = value['truth']
     
     return current_actual_environment,current_true_value
 
 
 
+def stateCheck(Q, state):
 
-def sarsa(env, n_episodes, data, stats=None, alpha=0.5, epsilon=0.1, dis_factor=0.9):
+	for k,v in Q.iteritems():
+			if k.sensor == state.sensor and k.analytic == state.analytic and k.external == state.external:
+				return k
+	return state
+
+
+
+
+def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1, dis_factor=0.9):
     """
     Sarsa (on-policy TD control): find optimal epsilon-greedy policy
 
@@ -134,40 +143,44 @@ def sarsa(env, n_episodes, data, stats=None, alpha=0.5, epsilon=0.1, dis_factor=
     
 
     # Set initial state of the agent using Training data[0] and obtain potential action candidates for that state
+    # initial_environment and state are objects of the State class. 
     initial_environment, initial_true_value = parse_train_data(0,data)
-    state, action_cands = env.set_state(initial_environment)
-
+    state, action_cands, state_cache = env.set_state(initial_environment,state_cache)
+    
     # pick next action based on policy
     probs, _ = policy(state, action_cands)
     # choose next action using the probability values
     action = action_cands[np.random.choice(len(action_cands), p=probs)]
-
-
+    # print "first state"
+    # print state.sensor
     #iterating over number of episodes
     for n_ep in xrange(1,n_episodes):
         # take a step using above action and get next state, next action candidates and reward
         # first determine the ground truth of next environmental state and the ground truth value for the application
         next_environment , next_true_value = parse_train_data(n_ep,data)
+        # print "here"
+        # print old_state.sensor
         # then take a step with action and obtain reward by comparing to the ground truth of the next state
-        next_state, next_action_cands, reward = env.step(action,next_environment,next_true_value)
-
+        next_state, next_action_cands, reward, state_cache = env.step(action,next_environment,next_true_value,state_cache)
         next_probs, _ = policy(next_state,next_action_cands)
         next_action = next_action_cands[np.random.choice(len(next_action_cands), p=next_probs)]
-        # print state
-        # Update action value function RL book page 104
-        td_target = reward + dis_factor * Q[frozenset(next_state)][next_action]
-        td_error = td_target - Q[frozenset(state)][action]
-        Q[frozenset(state)][action] += (alpha * td_error)
+        
         # print "here"
-        # print state
-        # print Q[frozenset(state)]
-        for k, v in Q.items():
-    		for k1, v1 in v.items():
-        		print "here"
-        		print k, k1, v1
+        # print next_action
+        # old_state = stateCheck(Q,initial_environment)
+        # new_state = stateCheck(Q,next_environment)
+
+        # print old_state
+        # print new_state
+
+        td_target = reward + dis_factor * Q[next_state][next_action]
+        td_error = td_target - Q[state][action]
+        Q[state][action] += (alpha * td_error)
 
         state = next_state
         action = next_action
+
+        # initial_environment = next_environment
 
     return Q, policy
 

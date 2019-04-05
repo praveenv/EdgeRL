@@ -7,6 +7,8 @@ from flood_env import Environment
 
 from flood_sarsa import sarsa
 
+from flood_statedef import State
+
 sensor_dict = {'waterLevel' : [0,1], 'camera' : [0,1]}
 analytic_dict = {'waterLevel_A' : [0,1], 'camera_A' : [0,1]}
 external_dict = {'timeOfDay' : [0,1], 'rain' : [0,1]}
@@ -20,8 +22,9 @@ action_plan_rules = { '1' : ['1','2'] , '2' : ['1','2'] }
 
 action_space = {'1','2'}
 
+
 # set up the Reinforcement Learning environment 
-env = Environment(sensor_dict, analytic_dict, external_dict, action_plan_dict, action_plan_rules,action_space)
+env = Environment(action_plan_dict, action_plan_rules,action_space)
 
 
 
@@ -35,8 +38,47 @@ for i in xrange(0,30):
 	else:
 		data[str(i)] = temp1
 
+state_cache = []
 
-Q, policy = sarsa(env, 30, data)
 
-# for k, v in data.iteritems():
-# 	print k, v
+Q, policy = sarsa(env, 30, data, state_cache)
+# print Q
+print "Q TABLE"
+for k, v in Q.iteritems():
+	for a,b in v.items():
+		print k,a,b
+
+print "STATE CACHE"
+for idx, v in enumerate(state_cache):
+	print idx, v.sensor, v.analytic, v.external
+
+print "ACTINO PLAN"
+print action_plan_dict
+# print Q.items()
+
+# class Foo:
+#     def __init__(self):
+#         pass
+
+# myinstance = State(temp['sensor'],temp['analytic'],temp['external'])
+# yolo = State(temp1['sensor'],temp1['analytic'],temp1['external'])
+
+# myman = myinstance
+
+# Q = defaultdict(lambda: defaultdict(lambda: 0.0))
+
+# Q[myinstance]['1'] += 1
+# Q[myinstance]['2'] += 3
+# Q[yolo]['2'] +=2
+# Q[yolo]['1'] +=5
+
+# state_Q = Q[myinstance]
+
+
+# print yolo.sensor
+# print state_Q
+# print Q
+
+# for ac in state_Q:
+# 	print ac
+

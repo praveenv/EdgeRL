@@ -3,15 +3,14 @@
 import numpy as np
 from flood_analytics import analytic_controller
 
+from flood_statedef import State
+
 
 class Environment:
     
 
-    def __init__(self,sensor_dict,analytic_dict,external_dict,action_plan_dict,action_plan_rules,action_space):
-        
-        self.sensor_dict = sensor_dict
-        self.analytic_dict = analytic_dict
-        self.external_dict = external_dict
+    def __init__(self,action_plan_dict,action_plan_rules,action_space):
+
         self.action_plan_dict = action_plan_dict
         self.action_plan_rules = action_plan_rules
 
@@ -22,14 +21,14 @@ class Environment:
 
 
 
-    def action_candidates(self):
+    def action_candidates(self,initial_environment):
         '''
         Function to return the valid action plans based on the current state and defined action rules
         Returns a list of indices of valid Action Plan IDs
         The indices are derived from the action space defined in the main script. 
         '''
 
-        current_state_action_plan = self.parse_state_action()
+        current_state_action_plan = self.parse_state_action(initial_environment)
         current_state_action_plan = str(current_state_action_plan)
 
         current_action_candidates = []
@@ -38,7 +37,7 @@ class Environment:
         return current_action_candidates
 
 
-    def set_state(self,initial_environment):
+    def set_state(self,initial_environment,state_cache):
         '''
         Function to set the initial state of the RL agent every episode. 
         Parameter
@@ -46,18 +45,24 @@ class Environment:
         initial_environment : dictionary with the initial sensor, analytic and environmental conditions given by first training data tuple
         '''
 
-        self.state = {}
-        self.state['sensor'] = initial_environment['sensor']
-        self.state['analytic'] = initial_environment['analytic']
-        self.state['external'] = initial_environment['external']
+        state_hash = 0
+        flag = 0
+        for idx, cache in enumerate(state_cache):
+            if cache.sensor == initial_environment.sensor and cache.analytic == initial_environment.analytic and cache.external == initial_environment.external:
+                state_hash = idx
+                flag = 1
 
-        current_action_candidates = self.action_candidates()
+        if flag == 0:
+            state_cache.append(initial_environment)
+            state_hash = 0
+
+        current_action_candidates = self.action_candidates(initial_environment)
         
-        return self.state, current_action_candidates
+        return state_hash, current_action_candidates, state_cache
 
 
 
-    def parse_state_action(self):
+    def parse_state_action(self,initial_environment):
         '''
         This function is used to parse the current state based on the action plan dictionary
         Returns the Action Plan ID that the current state corresponds to
@@ -65,9 +70,13 @@ class Environment:
         '''
 
         
-        current_state_sensor = self.state['sensor']
-        current_state_analytic = self.state['analytic']
-        current_state_external = self.state['external']
+        # current_state_sensor = self.state['sensor']
+        # current_state_analytic = self.state['analytic']
+        # current_state_external = self.state['external']
+
+        current_state_sensor = initial_environment.sensor
+        current_state_analytic = initial_environment.analytic
+        current_state_external = initial_environment.external
 
         number_of_action_plans = len(self.action_plan_dict)
 
@@ -116,7 +125,7 @@ class Environment:
 
 
 
-    def step(self,action,next_environment,next_true_value):
+    def step(self,action,next_environment,next_true_value,state_cache):
         '''
         This function returns the next state, next action candidates and reward as a result of taking current action in current state
         Parameters
@@ -138,18 +147,33 @@ class Environment:
         next_action_plan_dict = self.action_plan_dict[action]
 
         #update current state's sensor and analytics with the new one after performing the action
-        self.state['sensor'] = next_action_plan_dict['sensor']
-        self.state['analytic'] = next_action_plan_dict['analytic']
+        # self.state['sensor'] = next_action_plan_dict['sensor']
+        # self.state['analytic'] = next_action_plan_dict['analytic']
 
-        # update the new state's environment with the true readings from the data
-        self.state['external'] = next_environment['external']
+        new_state_hash = -1
+        for idx,state in enumerate(state_cache):
+            if state.sensor == next_action_plan_dict['sensor'] and state.analytic == next_action_plan_dict['analytic'] and state.external == next_environment.external:
+                new_state_hash = idx
+                new_state = state
 
-        action_cands = self.action_candidates()
+        if new_state_hash == -1:
+            new_state = State(next_action_plan_dict['sensor'],next_action_plan_dict['analytic'],next_environment.external)
+            new_state_hash = len(state_cache) # since it is 0 based
+            state_cache.append(new_state)
+
+
+        # self.state.sensor = next_action_plan_dict['sensor']
+        # self.state.analytic = next_action_plan_dict['analytic']
+
+        # # update the new state's environment with the true readings from the data
+        # self.state['external'] = next_environment['external']
+        # self.state.external = next_environment.external
+
+        action_cands = self.action_candidates(new_state)
         
         reward = self.get_reward(action,next_true_value)
 
+        # return self.state, action_cands, reward
+        return new_state_hash, action_cands, reward, state_cache
 
-        return self.state, action_cands, reward
-
-
-       # self.state, action_cand = self._update_state()
+       
