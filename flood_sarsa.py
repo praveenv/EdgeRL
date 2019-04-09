@@ -81,6 +81,11 @@ def parse_train_data(n_ep,data):
     -----------
     n_ep : integer reflecting current episode number and the training data index that needs to be accessed. 
     data : input training data (one day's worth) of the form {'1':{'sensor':{}, 'analytic':{},'external':{},'truth':{}}} , an ordered Dictionary
+
+    Returns
+    --------
+    current_actual_environment : State object that reflects the training data[n_ep], has sensor, analytic and external as attributes
+    current_true_value : current ground truth value to be compared with the analytics
     """
     
     current_true_value = -1
@@ -89,19 +94,9 @@ def parse_train_data(n_ep,data):
         if key == n_ep:
             current_actual_environment = State(value['sensor'],value['analytic'],value['external'])
             current_true_value = value['truth']
+            break
     
     return current_actual_environment,current_true_value
-
-
-
-def stateCheck(Q, state):
-
-	for k,v in Q.iteritems():
-			if k.sensor == state.sensor and k.analytic == state.analytic and k.external == state.external:
-				return k
-	return state
-
-
 
 
 def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1, dis_factor=0.9):
@@ -124,7 +119,6 @@ def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1
     -------
     Q: action value function
     policy: updated greedy policy
-    stats: updated episode statistics, no need to return
 
     """
 
@@ -151,27 +145,16 @@ def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1
     probs, _ = policy(state, action_cands)
     # choose next action using the probability values
     action = action_cands[np.random.choice(len(action_cands), p=probs)]
-    # print "first state"
-    # print state.sensor
+   
     #iterating over number of episodes
     for n_ep in xrange(1,n_episodes):
         # take a step using above action and get next state, next action candidates and reward
         # first determine the ground truth of next environmental state and the ground truth value for the application
         next_environment , next_true_value = parse_train_data(n_ep,data)
-        # print "here"
-        # print old_state.sensor
         # then take a step with action and obtain reward by comparing to the ground truth of the next state
         next_state, next_action_cands, reward, state_cache = env.step(action,next_environment,next_true_value,state_cache)
         next_probs, _ = policy(next_state,next_action_cands)
         next_action = next_action_cands[np.random.choice(len(next_action_cands), p=next_probs)]
-        
-        # print "here"
-        # print next_action
-        # old_state = stateCheck(Q,initial_environment)
-        # new_state = stateCheck(Q,next_environment)
-
-        # print old_state
-        # print new_state
 
         td_target = reward + dis_factor * Q[next_state][next_action]
         td_error = td_target - Q[state][action]
@@ -179,8 +162,6 @@ def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1
 
         state = next_state
         action = next_action
-
-        # initial_environment = next_environment
 
     return Q, policy
 

@@ -13,12 +13,7 @@ class Environment:
 
         self.action_plan_dict = action_plan_dict
         self.action_plan_rules = action_plan_rules
-
-
-        self.state = {}
-
         self.action_space = list(action_space) # list of unique actions plans in this application
-
 
 
     def action_candidates(self,initial_environment):
@@ -42,9 +37,17 @@ class Environment:
         Function to set the initial state of the RL agent every episode. 
         Parameter
         ----------
-        initial_environment : dictionary with the initial sensor, analytic and environmental conditions given by first training data tuple
+        initial_environment : state object with the sensor, analytic and external information as attributes that are dictionaries. 
+
+        Returns
+        -------
+        state_hash : index of the current state in the state_cache 
+        current_action_candidates : action plan ID's valid for the current state
+        state_cache : updated state_cache
         '''
 
+        # Start by checking whether the initial environment is already present in the state_cache. If yes, assign the existing state_hash value , else append the 
+        # current state to the state_cache and obtain the new state_hash value. 
         state_hash = 0
         flag = 0
         for idx, cache in enumerate(state_cache):
@@ -68,11 +71,6 @@ class Environment:
         Returns the Action Plan ID that the current state corresponds to
         State is a dictionary of the form - {'sensor' : {}, 'analytic': {}, 'external' : {}}
         '''
-
-        
-        # current_state_sensor = self.state['sensor']
-        # current_state_analytic = self.state['analytic']
-        # current_state_external = self.state['external']
 
         current_state_sensor = initial_environment.sensor
         current_state_analytic = initial_environment.analytic
@@ -118,7 +116,6 @@ class Environment:
         -------
         reward : numeric value corresponding to the reward. 
         '''
-
         reward_value = analytic_controller(action,next_true_value)
         return reward_value
 
@@ -137,7 +134,7 @@ class Environment:
 
         Return
         ------
-        next_state : new state information
+        new_state_hash : hash_value of the next state
         action_cands : new action plan IDs that are candidates for the next step
         reward : reward value that is a function of accuracy and cost incurred
         '''
@@ -146,9 +143,9 @@ class Environment:
         # get the required sensor and analytic states of the next action using the dictionary
         next_action_plan_dict = self.action_plan_dict[action]
 
-        #update current state's sensor and analytics with the new one after performing the action
-        # self.state['sensor'] = next_action_plan_dict['sensor']
-        # self.state['analytic'] = next_action_plan_dict['analytic']
+        
+        # Check whether the next state is already present in the existing state_cache. If yes, then return the existing state_hash value and state value 
+        # If not present then append the state to the state_cache and obtain the new hash_value
 
         new_state_hash = -1
         for idx,state in enumerate(state_cache):
@@ -162,18 +159,12 @@ class Environment:
             state_cache.append(new_state)
 
 
-        # self.state.sensor = next_action_plan_dict['sensor']
-        # self.state.analytic = next_action_plan_dict['analytic']
-
-        # # update the new state's environment with the true readings from the data
-        # self.state['external'] = next_environment['external']
-        # self.state.external = next_environment.external
-
         action_cands = self.action_candidates(new_state)
         
+        # Get the reward for performing the current action. In this work, we model the reward as a function of the accuracy and cost incurred of the analytic 
+        # compared to the ground truth.         
         reward = self.get_reward(action,next_true_value)
 
-        # return self.state, action_cands, reward
         return new_state_hash, action_cands, reward, state_cache
 
        
