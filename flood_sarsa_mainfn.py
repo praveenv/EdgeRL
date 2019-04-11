@@ -36,13 +36,13 @@ for i in xrange(0,1000):
 state_cache = []
 
 # Run the SARSA algorithm
-# Q, policy = sarsa(env, 100, data, state_cache)
+Q, policy = sarsa(env, 1000, data, state_cache)
 
 # Run the Q-Learning algorithm
 # Q, policy = qlearning(env, 1000, data, state_cache)
 
 # Run the nstep SARSA algorithm
-Q, policy = nstep_sarsa(env, 1000, 5, data, state_cache)
+# Q, policy = nstep_sarsa(env, 1000, 5, data, state_cache)
 
 # print Q
 print "Q TABLE"
