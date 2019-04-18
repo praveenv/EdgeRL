@@ -4,6 +4,7 @@ import itertools
 from collections import defaultdict, OrderedDict
 from quality_env import Environment
 from quality_statedef import State
+from tqdm import tqdm
 
 def epsilon_greedy_policy(Q, epsilon):
     """
@@ -84,6 +85,7 @@ def convert_to_dict(data):
 
 	current_dict['analytic'] = {}
 	current_dict['analytic']['coarse'] = 1
+	current_dict['analytic']['fine'] = 0
 
 	current_dict['external'] = {}
 	current_dict['external']['timeOfDay'] = data[5]
@@ -161,4 +163,34 @@ def sarsa(env, n_episodes, data, state_cache, stats=None, alpha=0.5, epsilon=0.1
     initial_environment, initial_true_value = parse_train_data(0,data)
     state, action_cands, state_cache = env.set_state(initial_environment,state_cache)
 
-    return 1,2
+    store_result = []
+    store_truth = []
+    store_option_chosen = []
+
+     # pick next action based on policy
+    probs, _ = policy(state, action_cands)
+    # choose next action using the probability values
+    action = action_cands[np.random.choice(len(action_cands), p=probs)]
+
+    #iterating over number of episodes
+    for n_ep in tqdm(xrange(1,n_episodes)):
+    	# print n_ep
+        # take a step using above action and get next state, next action candidates and reward
+        # first determine the ground truth of next environmental state and the ground truth value for the application
+        next_environment , next_true_value = parse_train_data(n_ep,data)
+        # then take a step with action and obtain reward by comparing to the ground truth of the next state
+        next_state, next_action_cands, reward, state_cache, result, truth, option_chosen = env.step(action,next_environment,next_true_value,state,state_cache,data[n_ep-1])
+        store_result.append(result)
+        store_truth.append(truth)
+        store_option_chosen.append(option_chosen)
+        next_probs, _ = policy(next_state,next_action_cands)
+        next_action = next_action_cands[np.random.choice(len(next_action_cands), p=next_probs)]
+
+        td_target = reward + dis_factor * Q[next_state][next_action]
+        td_error = td_target - Q[state][action]
+        Q[state][action] += (alpha * td_error)
+
+        state = next_state
+        action = next_action
+
+    return Q, policy, store_result, store_truth, store_option_chosen

@@ -6,6 +6,7 @@ from collections import defaultdict, OrderedDict
 from quality_env import Environment
 from quality_sarsa import sarsa
 from quality_ml_model import generate_ml_models,comparison
+from quality_dqn import DQNAgent
 
 
 # define the action plan IDs and the transition rules
@@ -19,11 +20,11 @@ action_space = {'1','2'}
 # set up the reinforcement learning environment
 env = Environment(action_plan_dict,action_plan_rules,action_space)
 
-
+agent = DQNAgent(1,2)
 # read and setup data for ML model training as well as for the RL environment
-data_path = "./Data/water_quality_data.csv"
-ml_train_path = "./Data/ML_training_indices.csv"
-non_ml_train_path = "./Data/non_ML_training_indices.csv"
+data_path = "../Data/water_quality_data.csv"
+ml_train_path = "../Data/ML_training_indices.csv"
+non_ml_train_path = "../Data/non_ML_training_indices.csv"
 
 data = np.genfromtxt(data_path,delimiter=',').astype(int)
 ml_train_indices = np.genfromtxt(ml_train_path,delimiter=',').astype(int)
@@ -40,14 +41,13 @@ data = data[non_ml_train_indices]
 generate_ml_models(ml_train_data)
 
 # Call the RL function
-
-training_limit = math.ceil(0.7 * len(data))
+training_limit = int(math.ceil(0.7 * len(data)))
 training_data = data[0:training_limit]
 test_data = data[(training_limit+1):len(data)]
 
 state_cache = []
 
-Q, policy, result_stats, truth_stats, option_chosen_stats = sarsa(env,len(data),data,state_cache)
+Q, policy, result_stats, truth_stats, option_chosen_stats = sarsa(env,agent,len(data),data,state_cache)
 
 
 # print Q
