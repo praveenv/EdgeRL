@@ -22,7 +22,7 @@ env = Environment(action_plan_dict,action_plan_rules,action_space)
 
 agent = DQNAgent(1,2)
 # read and setup data for ML model training as well as for the RL environment
-data_path = "../Data/water_quality_data.csv"
+data_path = "../Data/water_quality_data_1.csv"
 ml_train_path = "../Data/ML_training_indices.csv"
 non_ml_train_path = "../Data/non_ML_training_indices.csv"
 

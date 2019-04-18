@@ -3,8 +3,8 @@ import numpy as np
 import pickle
 
 def analytic_controller(action,state,next_true_value,data):
-	print "analytic controlelr"
-	print state.analytic['fine']
+	#print "analytic controlelr"
+	#print state.analytic['fine']
 	if state.analytic['fine'] == 1:
 		new_data = np.delete(data,7)
 		return rf_prediction(new_data,next_true_value)
@@ -37,11 +37,11 @@ def svm_prediction(new_data,next_true_value):
 	file = open('SVMmodel.pkl','r')
 	svm_model = pickle.load(file)
 	file.close()
-	print "inside sVM"
-	print new_data
+	#print "inside sVM"
+	#print new_data
 	result = svm_model.predict(np.array([new_data]))[0]
-	print result
-	print next_true_value
+	#print result
+	#print next_true_value
 	store_result = result
 	if result != next_true_value:
 		# result = -3
@@ -50,8 +50,8 @@ def svm_prediction(new_data,next_true_value):
 		# result = 1
 		result = 1
 	# reward = (result)
-	print result
+	#print result
 	reward = float(float(result) / float(1 + 2))
-	print reward
+	#print reward
 	option_chosen = 0
 	return reward, store_result, next_true_value,option_chosen
