@@ -168,13 +168,8 @@ def sarsa(env, agent,n_episodes, data, state_cache, stats=None, alpha=0.5, epsil
     store_truth = []
     store_option_chosen = []
 
-     # pick next action based on policy
-    probs, _ = policy(state, action_cands)
     # choose next action using the probability values
-    # action = action_cands[np.random.choice(len(action_cands), p=probs)]
     action = str(agent.act(state))
-    #print "here"
-    #print action
     #iterating over number of episodes
     for n_ep in tqdm(xrange(1,n_episodes)):
     	# #print n_ep
@@ -186,22 +181,9 @@ def sarsa(env, agent,n_episodes, data, state_cache, stats=None, alpha=0.5, epsil
         store_result.append(result)
         store_truth.append(truth)
         store_option_chosen.append(option_chosen)
-        #print "inside episode loop"
-        #print reward
-        #print next_state
-        #print action
         agent.remember(state,action,reward,next_state)
 
-        next_probs, _ = policy(next_state,next_action_cands)
-        # next_action = next_action_cands[np.random.choice(len(next_action_cands), p=next_probs)]
         next_action = str(agent.act(next_state))
-        #print "next action"
-        #print next_action
-        td_target = reward + dis_factor * Q[next_state][next_action]
-        #print td_target
-        td_error = td_target - Q[state][action]
-        Q[state][action] += (alpha * td_error)
-
         state = next_state
         action = next_action
 
