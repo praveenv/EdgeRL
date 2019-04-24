@@ -25,7 +25,7 @@ def rf_prediction(new_data,next_true_value):
 		# result = 1
 		result = 5
 	# reward = (result * 3) / 5
-	reward = float(float(result) / float(1.5 + 7))
+	reward = float(float(result) / float(1.5 + (7 * 0.00412)))
 	option_chosen = 1
 	return reward, store_result, next_true_value,option_chosen
 
@@ -44,6 +44,6 @@ def svm_prediction(new_data,next_true_value):
 		# result = 1
 		result = 1
 	# reward = (result)
-	reward = float(float(result) / float(1 + 2))
+	reward = float(float(result) / float(1 + (2 * 0.00412)))
 	option_chosen = 0
 	return reward, store_result, next_true_value,option_chosen

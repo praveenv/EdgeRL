@@ -5,12 +5,20 @@ from sklearn.svm import SVC
 
 def generate_ml_models(data):
 
+        # X = data[:,0:7]
+        # y = data[:,7]
+        # rf_model = RandomForestClassifier(n_estimators = 10, max_depth = 3)
+        # rf_model.fit(X,y)
+        # file = open('randomForestmodel.pkl','wb')
+        # pickle.dump(rf_model, file)
+        # file.close()
+
         X = data[:,0:7]
         y = data[:,7]
-        rf_model = RandomForestClassifier(n_estimators = 10, max_depth = 3)
-        rf_model.fit(X,y)
-        file = open('randomForestmodel.pkl','wb')
-        pickle.dump(rf_model, file)
+        model = SVC(gamma='auto')
+        model.fit(X,y)
+        file = open('SVM_fine.pkl','wb')
+        pickle.dump(model, file)
         file.close()
 
 
@@ -26,7 +34,8 @@ def comparison(data):
 
     X = data[:,0:7]
     y = data[:,7]
-    file = open('randomForestmodel.pkl','r')
+    # file = open('randomForestmodel.pkl','r')
+    file = open('SVM_fine.pkl','r')
     rf_model = pickle.load(file)
     file.close()
     result = rf_model.predict(X)

@@ -91,9 +91,9 @@ for i in range(0,validation_length):
 		FN_count += 1
 	current_option = validation_option[i]
 	if current_option == 1:
-		validation_cost += (7 + 1.5)
+		validation_cost += ((7 * 0.00412) + 1.5)
 	elif current_option == 0:
-		validation_cost += (2 + 1)
+		validation_cost += ((2 * 0.00412) + 1)
 
 fine_accuracy, coarse_accuracy = comparison(test_data)
 
@@ -109,8 +109,8 @@ print accuracy
 print fine_accuracy
 print coarse_accuracy
 
-fine_cost = 8.5 * validation_length
-coarse_cost = 3 * validation_length
+fine_cost = ((7 * 0.00412) + 1.5) * validation_length
+coarse_cost = ((2 * 0.00412) + 1) * validation_length
 print validation_cost
 print fine_cost
 print coarse_cost
