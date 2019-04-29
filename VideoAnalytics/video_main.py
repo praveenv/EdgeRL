@@ -7,6 +7,8 @@ from video_env import Environment
 from video_dqn import DQNAgent
 from video_sarsa import sarsa
 
+from sklearn.metrics import mean_squared_error
+from math import sqrt
 
 action_plan_dict = { '1' : {'sensor' : {'motion' : 1, 'camera' : 0, 'rain_gauge' : 1}, 'analytic' : {'coarse' : 1, 'fine' : 0}},
 					'2' : {'sensor' : {'motion' : 1, 'camera' : 1, 'rain_gauge' : 1}, 'analytic' : {'coarse' : 1, 'fine' : 1}}
@@ -24,6 +26,22 @@ agent = DQNAgent(1,2)
 data_path = "./Data/day1.csv"
 
 data = np.genfromtxt(data_path,delimiter=',',dtype=None,skip_header=1)
+data = np.char.strip(data,'"')
+data = np.delete(data,0,1).astype(int)
+
+
 
 state_cache = []
 Q, policy, result_stats, truth_stats, option_chosen_stats = sarsa(env,agent,len(data),data,state_cache)
+
+
+
+motion_sensor_comparison = data[:,1]
+
+dqn_mean_square = sqrt(mean_squared_error(result_stats,truth_stats))
+
+motion_mean_square = sqrt(mean_squared_error(motion_sensor_comparison,truth_stats))
+
+print "final"
+print dqn_mean_square
+print motion_mean_square

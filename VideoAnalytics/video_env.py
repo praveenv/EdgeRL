@@ -1,6 +1,7 @@
 import numpy as np
 
 from video_statedef import State
+from video_analytics import analytic_controller
 
 class Environment:
 
@@ -51,6 +52,56 @@ class Environment:
 
 
 
+    def set_state(self,initial_environment,state_cache):
+        '''
+        Function to set the initial state of the RL agent every episode. 
+        Parameter
+        ----------
+        initial_environment : state object with the sensor, analytic and external information as attributes that are dictionaries. 
+
+        Returns
+        -------
+        state_hash : index of the current state in the state_cache 
+        current_action_candidates : action plan ID's valid for the current state
+        state_cache : updated state_cache
+        '''
+
+        # Start by checking whether the initial environment is already present in the state_cache. If yes, assign the existing state_hash value , else append the 
+        # current state to the state_cache and obtain the new state_hash value. 
+        state_hash = 0
+        flag = 0
+        for idx, cache in enumerate(state_cache):
+            if cache.sensor == initial_environment.sensor and cache.analytic == initial_environment.analytic and cache.external == initial_environment.external and cache.sensor_reading == initial_environment.sensor_reading:
+                state_hash = idx
+                flag = 1
+
+        if flag == 0:
+            state_cache.append(initial_environment)
+            state_hash = 0
+
+        current_action_candidates = self.action_candidates(initial_environment)
+        
+        return state_hash, current_action_candidates, state_cache
+
+
+
+    def get_reward(self,action,state,next_true_value,data):
+        '''
+        This function returns a reward value for the current action taken by comparing the result of the analytics with the ground truth value
+        Note : Ideally for reusability, I want to keep this function generic and compute the actual reward value inside the analytic function itself by 
+        passing the true_value as a parameter. 
+        Parameters
+        ----------
+        action : Action ID of the current step
+        next_true_value : ground truth from data
+
+        Returns
+        -------
+        reward : numeric value corresponding to the reward. 
+        '''
+        reward_value, result, truth, option_chosen = analytic_controller(action,state,next_true_value,data)
+        return reward_value, result, truth, option_chosen
+        
 
     def step(self,action,next_environment,next_true_value,state,state_cache,data):
         '''
