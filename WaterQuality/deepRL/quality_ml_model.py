@@ -55,7 +55,7 @@ def comparison(data):
     rf_accuracy = float(float(TP_count + TN_count) / float(len(y)))
 
 
-    X = data[:,[1,5,6]]
+    X = data[:,[5,5,6]]
     y = data[:,7]
     file = open('SVMmodel.pkl','r')
     svm_model = pickle.load(file)
