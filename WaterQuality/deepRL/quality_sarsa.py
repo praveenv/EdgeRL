@@ -187,6 +187,6 @@ def sarsa(env, agent,n_episodes, data, state_cache, stats=None, alpha=0.5, epsil
         state = next_state
         action = next_action
 
-        agent.replay(10)
+        agent.replay(50)
 
     return Q, policy, store_result, store_truth, store_option_chosen

@@ -53,7 +53,10 @@ def comparison(data):
         if result[i] == 0 and y[i] == 1:
                 FN_count += 1
     rf_accuracy = float(float(TP_count + TN_count) / float(len(y)))
-
+    fine_tp = TP_count
+    fine_tn = TN_count
+    fine_fp = FP_count
+    fine_fn = FN_count
 
     X = data[:,[5,5,6]]
     y = data[:,7]
@@ -76,5 +79,9 @@ def comparison(data):
             if result[i] == 0 and y[i] == 1:
                     FN_count += 1
     svm_accuracy = float(float(TP_count + TN_count) / float(len(y)))
+    coarse_tp = TP_count
+    coarse_tn = TN_count
+    coarse_fp = FP_count
+    coarse_fn = FN_count
 
-    return rf_accuracy,svm_accuracy
+    return rf_accuracy,svm_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn

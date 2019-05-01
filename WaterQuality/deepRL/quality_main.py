@@ -8,6 +8,7 @@ from quality_sarsa import sarsa
 from quality_ml_model import generate_ml_models,comparison
 from quality_dqn import DQNAgent
 
+from sklearn.model_selection import KFold
 
 # define the action plan IDs and the transition rules
 action_plan_dict = { '1' : {'sensor' : {'do2' : 0, 'turbidity' : 1, 'tds' : 0, 'ph' : 0, 'conductivity' : 0, 'rain_gauge' : 1}, 'analytic' : {'coarse' : 1, 'fine' : 0}},
@@ -50,67 +51,188 @@ state_cache = []
 Q, policy, result_stats, truth_stats, option_chosen_stats = sarsa(env,agent,len(data),data,state_cache)
 
 
-# print Q
-print "Q TABLE"
-for k, v in Q.iteritems():
-	for a,b in v.items():
-		print k,a,b
 
-print "STATE CACHE"
-for idx, v in enumerate(state_cache):
-	print idx, v.sensor, v.analytic, v.external
+kf = KFold(n_splits=10)
+split_count = 0
+agent_avg_accuracy = []
+fine_avg_accuracy = []
+coarse_avg_accuracy = []
 
-print "ACTION PLAN"
-print action_plan_dict
+agent_avg_tp = []
+agent_avg_tn = []
+agent_avg_fp = []
+agent_avg_fn = []
 
-validation_length = len(test_data)
-# print "here"
-# print result_stats
-# print truth_stats
-validation_result = result_stats[-validation_length:]
-validation_truth = truth_stats[-validation_length:]
-validation_option = option_chosen_stats[-validation_length:]
-# print validation_result
-# print validation_truth
+fine_avg_tp = []
+fine_avg_tn = []
+fine_avg_fp = []
+fine_avg_fn = []
 
-TP_count = 0
-TN_count = 0
-FP_count = 0
-FN_count = 0
-validation_cost = 0
+coarse_avg_tp = []
+coarse_avg_tn = []
+coarse_avg_fp = []
+coarse_avg_fn = []
+
+
+result_stats = np.array(result_stats)
+truth_stats = np.array(truth_stats)
+option_chosen_stats = np.array(option_chosen_stats)
+
+
+final_stats = np.column_stack((result_stats,truth_stats,option_chosen_stats))
+
+np.savetxt("final_stats.csv",final_stats,delimiter=",")
+
+
+for train_index,test_index in kf.split(result_stats):
+	test_index = np.array(test_index)
+	split_count = split_count + 1
+	validation_result = result_stats[(test_index)]
+	validation_truth = truth_stats[(test_index)]
+	# validation_option = option_chosen_stats[test_index]
+
+	test_data = data[(test_index)]
+	validation_length = len(test_index)
+
+	TP_count = 0
+	TN_count = 0
+	FP_count = 0
+	FN_count = 0
+	for i in range(0,validation_length):
+		if validation_result[i] == 1 and validation_truth[i] == 1:
+			TP_count += 1
+		elif validation_result[i] == 0 and validation_truth[i] == 0:
+			TN_count += 1
+		elif validation_result[i] == 1 and validation_truth[i] == 0:
+			FP_count += 1
+		elif validation_result[i] == 0 and validation_truth[i] == 1:
+			FN_count += 1
+		# current_option = validation_option[i]
+		# if current_option == 1:
+		# 	validation_cost += ((7 * 0.00412) + 1.5)
+		# elif current_option == 0:
+		# 	validation_cost += ((2 * 0.00412) + 1)
+
+	fine_accuracy, coarse_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn = comparison(test_data)
+	print("ACCURACY STATS FOR SPLIT NUMBER", split_count)
+	print TP_count
+	print TN_count
+	print FP_count
+	print FN_count
+	print validation_length
+
+	agent_avg_tp.append(TP_count)
+	agent_avg_tn.append(TN_count)
+	agent_avg_fp.append(FP_count)
+	agent_avg_fn.append(FN_count)
+
+	fine_avg_tp.append(fine_tp)
+	fine_avg_tn.append(fine_tn)
+	fine_avg_fp.append(fine_fp)
+	fine_avg_fn.append(fine_fn)
+
+	coarse_avg_tp.append(coarse_tp)
+	coarse_avg_tn.append(coarse_tn)
+	coarse_avg_fp.append(coarse_fp)
+	coarse_avg_fn.append(coarse_fn)
+
+	accuracy = float(float(TP_count + TN_count) / float(validation_length))
+	print accuracy
+	print fine_accuracy
+	print coarse_accuracy
+	agent_avg_accuracy.append(accuracy)
+	fine_avg_accuracy.append(fine_accuracy)
+	coarse_avg_accuracy.append(coarse_accuracy)
+
+
+print "AVERAGE ACCURACIES AFTER SPLITS"
+print np.mean(agent_avg_accuracy)
+print np.mean(fine_avg_accuracy)
+print np.mean(coarse_avg_accuracy)
+
+
+print "AVERAGE TRUE POSITIVES"
+print np.mean(agent_avg_tp)
+print np.mean(fine_avg_tp)
+print np.mean(coarse_avg_tp)
+
+print "AVERAGE TRUE NEGATIVES"
+print np.mean(agent_avg_tn)
+print np.mean(fine_avg_tn)
+print np.mean(coarse_avg_tn)
+
+print "AVERAGE FALSE POSITIVES"
+print np.mean(agent_avg_fp)
+print np.mean(fine_avg_fp)
+print np.mean(coarse_avg_fp)
+
+print "AVERAGE FALSE NEGATIVES"
+print np.mean(agent_avg_fn)
+print np.mean(fine_avg_fn)
+print np.mean(coarse_avg_fn)
+
+# Beginning of comments
+# # print Q
+# print "Q TABLE"
+# for k, v in Q.iteritems():
+# 	for a,b in v.items():
+# 		print k,a,b
+
+# print "STATE CACHE"
+# for idx, v in enumerate(state_cache):
+# 	print idx, v.sensor, v.analytic, v.external
+
+# print "ACTION PLAN"
+# print action_plan_dict
+
+# validation_length = len(test_data)
+# # print "here"
+# # print result_stats
+# # print truth_stats
+# validation_result = result_stats[-validation_length:]
+# validation_truth = truth_stats[-validation_length:]
+# validation_option = option_chosen_stats[-validation_length:]
+# # print validation_result
+# # print validation_truth
+
+# TP_count = 0
+# TN_count = 0
+# FP_count = 0
+# FN_count = 0
+# validation_cost = 0
+# # print validation_length
+# for i in range(0,validation_length):
+# 	# print i
+# 	if validation_result[i] == 1 and validation_truth[i] == 1:
+# 		TP_count += 1
+# 	elif validation_result[i] == 0 and validation_truth[i] == 0:
+# 		TN_count += 1
+# 	elif validation_result[i] == 1 and validation_truth[i] == 0:
+# 		FP_count += 1
+# 	elif validation_result[i] == 0 and validation_truth[i] == 1:
+# 		FN_count += 1
+# 	current_option = validation_option[i]
+# 	if current_option == 1:
+# 		validation_cost += ((7 * 0.00412) + 1.5)
+# 	elif current_option == 0:
+# 		validation_cost += ((2 * 0.00412) + 1)
+
+# fine_accuracy, coarse_accuracy = comparison(test_data)
+
+# print "final"
+# print TP_count
+# print TN_count
+# print FP_count
+# print FN_count
 # print validation_length
-for i in range(0,validation_length):
-	# print i
-	if validation_result[i] == 1 and validation_truth[i] == 1:
-		TP_count += 1
-	elif validation_result[i] == 0 and validation_truth[i] == 0:
-		TN_count += 1
-	elif validation_result[i] == 1 and validation_truth[i] == 0:
-		FP_count += 1
-	elif validation_result[i] == 0 and validation_truth[i] == 1:
-		FN_count += 1
-	current_option = validation_option[i]
-	if current_option == 1:
-		validation_cost += ((7 * 0.00412) + 1.5)
-	elif current_option == 0:
-		validation_cost += ((2 * 0.00412) + 1)
 
-fine_accuracy, coarse_accuracy = comparison(test_data)
+# accuracy = float(float(TP_count + TN_count) / float(validation_length))
+# print accuracy
+# print fine_accuracy
+# print coarse_accuracy
 
-print "final"
-print TP_count
-print TN_count
-print FP_count
-print FN_count
-print validation_length
-
-accuracy = float(float(TP_count + TN_count) / float(validation_length))
-print accuracy
-print fine_accuracy
-print coarse_accuracy
-
-fine_cost = ((7 * 0.00412) + 1.5) * validation_length
-coarse_cost = ((2 * 0.00412) + 1) * validation_length
-print validation_cost
-print fine_cost
-print coarse_cost
+# fine_cost = ((7 * 0.00412) + 1.5) * validation_length
+# coarse_cost = ((2 * 0.00412) + 1) * validation_length
+# print validation_cost
+# print fine_cost
+# print coarse_cost
