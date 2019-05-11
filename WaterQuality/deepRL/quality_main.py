@@ -78,10 +78,16 @@ result_stats = np.array(result_stats)
 truth_stats = np.array(truth_stats)
 option_chosen_stats = np.array(option_chosen_stats)
 
+fine_accuracy, coarse_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn,result_fine,result_coarse = comparison(data)
+print result_fine
+print(len(result_fine))
+print(len(result_coarse))
+print len(result_stats)
+result_fine = result_fine[1:len(result_fine)]
+result_coarse = result_coarse[1:len(result_coarse)]
+final_stats = np.column_stack((result_stats,truth_stats,option_chosen_stats,result_fine,result_coarse))
 
-final_stats = np.column_stack((result_stats,truth_stats,option_chosen_stats))
-
-np.savetxt("final_stats.csv",final_stats,delimiter=",")
+# np.savetxt("final_quality_stats_for_trace_simulation.csv",final_stats,delimiter=",")
 
 
 for train_index,test_index in kf.split(result_stats):
@@ -113,7 +119,7 @@ for train_index,test_index in kf.split(result_stats):
 		# elif current_option == 0:
 		# 	validation_cost += ((2 * 0.00412) + 1)
 
-	fine_accuracy, coarse_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn = comparison(test_data)
+	fine_accuracy, coarse_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn,result_fine,result_coarse = comparison(test_data)
 	print("ACCURACY STATS FOR SPLIT NUMBER", split_count)
 	print TP_count
 	print TN_count
@@ -170,6 +176,27 @@ print "AVERAGE FALSE NEGATIVES"
 print np.mean(agent_avg_fn)
 print np.mean(fine_avg_fn)
 print np.mean(coarse_avg_fn)
+
+
+print "TOTAL TRUE POSITIVES"
+print np.sum(agent_avg_tp)
+print np.sum(fine_avg_tp)
+print np.sum(coarse_avg_tp)
+
+print "TOTAL TRUE NEGATIVES"
+print np.sum(agent_avg_tn)
+print np.sum(fine_avg_tn)
+print np.sum(coarse_avg_tn)
+
+print "TOTAL FALSE POSITIVES"
+print np.sum(agent_avg_fp)
+print np.sum(fine_avg_fp)
+print np.sum(coarse_avg_fp)
+
+print "TOTAL FALSE NEGATIVES"
+print np.sum(agent_avg_fn)
+print np.sum(fine_avg_fn)
+print np.sum(coarse_avg_fn)
 
 # Beginning of comments
 # # print Q

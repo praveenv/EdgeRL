@@ -39,6 +39,8 @@ def comparison(data):
     rf_model = pickle.load(file)
     file.close()
     result = rf_model.predict(X)
+    result_fine = result
+
     TP_count = 0
     TN_count = 0
     FP_count = 0
@@ -65,6 +67,7 @@ def comparison(data):
     file.close()
         
     result = svm_model.predict(X)
+    result_coarse = result
     TP_count = 0
     TN_count = 0
     FP_count = 0
@@ -84,4 +87,4 @@ def comparison(data):
     coarse_fp = FP_count
     coarse_fn = FN_count
 
-    return rf_accuracy,svm_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn
+    return rf_accuracy,svm_accuracy,fine_tp,fine_tn,fine_fp,fine_fn,coarse_tp,coarse_tn,coarse_fp,coarse_fn,result_fine,result_coarse

@@ -81,18 +81,21 @@ def convert_to_dict(data):
 	current_dict['sensor']['motion'] = 1
 	current_dict['sensor']['camera'] = 0
 	current_dict['sensor']['rain_gauge'] = 1
+	current_dict['sensor']['opencv'] = 0
 
 	current_dict['analytic'] = {}
 	current_dict['analytic']['coarse'] = 1
 	current_dict['analytic']['fine'] = 0
+	current_dict['analytic']['medium'] = 0
 
 	current_dict['external'] = {}
-	current_dict['external']['timeOfDay'] = data[3]
+	current_dict['external']['timeOfDay'] = data[4]
 
 	current_dict['sensor_reading'] = {}
 	current_dict['sensor_reading']['motion'] = int(data[1])
 	current_dict['sensor_reading']['camera'] = int(data[0])
-	current_dict['sensor_reading']['rain_gauge'] = int(data[2])
+	current_dict['sensor_reading']['rain_gauge'] = int(data[3])
+	current_dict['sensor_reading']['opencv'] = int(data[2])
 
 	current_truth = data[0]
 	return current_dict,current_truth
